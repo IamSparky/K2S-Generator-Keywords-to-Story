@@ -18,21 +18,27 @@ We fine-tune the [**google/flan-t5-base**](https://huggingface.co/google/flan-t5
 Keyword2Story/
 │
 ├── data/
-│   └── tinystories.csv # Original dataset (downloaded from Kaggle)
-│   └── stories_with_keywords.pkl # Output after keyword extraction
+│   └── archived data file # Original dataset (downloaded from Kaggle)
 │
-├── KeywordsExtractionScript/
-│   ├── keyword_extraction_vs_code.py # Keyword extraction using TF-IDF (VS Code version)
-│   └── keyword_extraction_notebook.ipynb # Interactive Jupyter Notebook version
+├── outputs/
+│   ├── stories_with_keywords_train.pkl # Keyword extracted Data using extractKeywords.py
+│   └── stories_with_keywords_valid.pkl # Keyword extracted Data using extractKeywords.py
 │
-├── StoryGenerationScript/
-│   ├── story_generation_vs_code.py # PyTorch training loop using CLI
-│   ├── story_generation_notebook.ipynb # Notebook version for interactive training
-│   ├── trainer.py # Train and eval loop with BLEU & ROUGE
-│   └── dataset.py # Custom Dataset class for keyword-to-story
-│
-├── models/
-│   └── flan_t5_storygen_fold.pt # Saved fine-tuned model weights
+├── scripts/
+│   └── keywordsExtractionScript/
+|   |   └── dataCheck.ipynb
+|   |   └── extractKeywords.py
+|   |
+|   └── storyGenerationScript/
+|       └── jupyter notebook/
+|       |   └── createStoryGenerationModel
+|       |   
+|       └── VS Code/
+|           └── dataframeWithCrossValidation.py
+|           └── dataset.py
+|           └── trainer.py
+|           └── evaluator.py
+|           └── run.py 
 │
 └── README.md # This file
 ```
