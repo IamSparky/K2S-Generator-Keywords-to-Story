@@ -1,0 +1,23 @@
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore CSV files
+*.csv
+
+# Ignore JPG files
+*.jpg
+
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# (Other standard stuff)
+.env
+venv/
+env/
+.DS_Store
+*.log
+*.bin
+*.pt
