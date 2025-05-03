@@ -1,98 +1,94 @@
-# 🧠📝 TinyStories: Keyword-to-Story Generation with PyTorch + FLAN-T5
+# 🧠📝 Keyword2Story: TinyStories Generation with PyTorch + FLAN-T5
 
-Welcome to the **TinyStories Project**, where we turn a handful of keywords into complete short stories using the power of PyTorch and FLAN-T5!
+**Keyword2Story** turns just 5 keywords into rich, imaginative short stories using a fine-tuned `google/flan-t5-base` model.
 
-This project follows a streamlined 3-step pipeline:
+This project is built to run efficiently on minimal GPUs, with clean keyword extraction, structured training, and evaluation pipelines.
+
+---
+
+## 🔗 Model Source
+
+We fine-tune the [**google/flan-t5-base**](https://huggingface.co/google/flan-t5-base) model from Hugging Face, a powerful text-to-text transformer pre-trained on a wide range of instruction-following tasks.
+
+---
+
+## 📁 Project Structure
+
+```
+Keyword2Story/
+│
+├── data/
+│   └── tinystories.csv # Original dataset (downloaded from Kaggle)
+│   └── stories_with_keywords.pkl # Output after keyword extraction
+│
+├── KeywordsExtractionScript/
+│   ├── keyword_extraction_vs_code.py # Keyword extraction using TF-IDF (VS Code version)
+│   └── keyword_extraction_notebook.ipynb # Interactive Jupyter Notebook version
+│
+├── StoryGenerationScript/
+│   ├── story_generation_vs_code.py # PyTorch training loop using CLI
+│   ├── story_generation_notebook.ipynb # Notebook version for interactive training
+│   ├── trainer.py # Train and eval loop with BLEU & ROUGE
+│   └── dataset.py # Custom Dataset class for keyword-to-story
+│
+├── models/
+│   └── flan_t5_storygen_fold.pt # Saved fine-tuned model weights
+│
+└── README.md # This file
+```
+
 
 ---
 
 ## 📦 1. Download the Dataset
 
-We use the **TinyStories - Narrative Classification** dataset from Kaggle, which contains a wide range of small, structured, and themed stories perfect for text generation tasks.
+We use the TinyStories dataset from Kaggle, which contains hundreds of small structured stories perfect for generation tasks.
 
-📥 Get it from here:  
-🔗 [https://www.kaggle.com/datasets/thedevastator/tinystories-narrative-classification](https://www.kaggle.com/datasets/thedevastator/tinystories-narrative-classification)
+📥 Download it from here:  
+[**TinyStories - Narrative Classification**](https://www.kaggle.com/datasets/thedevastator/tinystories-narrative-classification)
 
-Once downloaded, place the dataset file (typically a `.csv`) in your local `data/` directory or wherever you plan to run your scripts from.
-
----
-
-## 🔍 2. Extract Keywords from Stories
-
-Next, we extract **5 high-quality keywords** from each story using lightweight NLP techniques like TF-IDF and token filtering.
-
-📂 Scripts for this step are in the folder:
-📁 KeywordsExtractionScript/
-│
-├── keyword_extraction_vs_code.py # Run this with a Python interpreter or VS Code
-├── keyword_extraction_notebook.ipynb # Run this interactively in Jupyter Notebook
-
-
-✅ Output: A new PKL file where each row contains the original story + 5 extracted keywords.
+Place the downloaded `tinystories.csv` inside the `data/` folder.
 
 ---
 
-## 🧠 3. Train the PyTorch Story Generator
+## 🔍 2. Extract Keywords
 
-With the extracted keywords in hand, we fine-tune a `flan-t5-base` model to **generate short stories from 5 input keywords**.
+Using basic NLP filtering + TF-IDF, extract 5 keywords for each story:
 
-📂 Training scripts are in:
-📁 StoryGenerationScript/
-│
-├── story_generation_vs_code.py # Full training pipeline in Python (VS Code style)
-├── story_generation_notebook.ipynb # Interactive notebook version (Jupyter-friendly)
-├── trainer.py # Core training + evaluation loops
+You can use:
+- `KeywordsExtractionScript/keyword_extraction_vs_code.py` for script-based usage
+- `KeywordsExtractionScript/keyword_extraction_notebook.ipynb` for notebook-based processing
 
-yaml
-Copy
-Edit
-
-✨ Features:
-- 5-Fold Cross Validation for robust evaluation
-- BLEU and ROUGE-L metrics
-- Progress tracked using `tqdm`
-- Minimal memory usage (designed for 6GB GPUs)
+✅ Output: A new file `stories_with_keywords.pkl` in `data/` containing stories + keywords.
 
 ---
 
-## ⚙️ Tech Stack
+## 🧠 3. Train the Story Generation Model
 
-- 🤖 `transformers` (Hugging Face)
-- 🔥 `PyTorch` with AMP
-- 📊 `nltk`, `rouge-score`, `tqdm`, `pandas`
-- 💻 Trained on local GPU / Amazon SageMaker (optional deployment-ready)
+Train a fine-tuned version of `flan-t5-base` to generate stories from keywords.
 
----
+Training scripts:
+- `StoryGenerationScript/story_generation_vs_code.py` — CLI version
+- `StoryGenerationScript/story_generation_notebook.ipynb` — Jupyter Notebook
 
-## 🚀 Output Example
-
-**Input Keywords:**
-robot, teddy, fix, help, steel
-
-markdown
-Copy
-Edit
-
-**Generated Story:**
-Once upon a time, there was a robot who saw a little girl crying because her teddy bear was torn. The robot tore a piece of steel from his own body to help her fix it. They became best friends and played in the park every day.
-
-css
-Copy
-Edit
+It uses:
+- 5-fold cross-validation
+- BLEU and ROUGE-L scores
+- GPU-friendly setup with TQDM progress tracking
 
 ---
 
-## 🧪 Try It Yourself
-
-Once trained, you can test the model like this:
+## 📈 Example Inference
 
 ```python
 from transformers import T5Tokenizer, T5ForConditionalGeneration
+import torch
 
-tokenizer = T5Tokenizer.from_pretrained("google/flan-t5-base")
-model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-base")
-model.load_state_dict(torch.load("flan_t5_storygen_fold.pt"))
+tokenizer = T5Tokenizer.from_pretrained("google/flan-t5-base", legacy = False)
+model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-base", device_map="auto").to(DEVICE)
+model.load_state_dict(torch.load("models/flan_t5_storygen_fold.pt"))
 
+model.eval()
 input_text = "generate story from keywords: robot, teddy, fix, help, steel"
 input_ids = tokenizer(input_text, return_tensors="pt").input_ids
 
@@ -100,8 +96,29 @@ output = model.generate(input_ids, max_length=256)
 print(tokenizer.decode(output[0], skip_special_tokens=True))
 ```
 
-🙌 Credits
-Created with ❤️ by Soumo
-Powered by PyTorch, Hugging Face, and pure storytelling magic.
+## 💡 Sample Output
 
+**Input Keywords:**  
+`robot, teddy, fix, help, steel`
 
+**Generated Story:**  
+> Once upon a time, there was a robot who saw a little girl crying because her teddy bear was torn.  
+> The robot tore a piece of steel from his own body to help her fix it.  
+> They became best friends and played in the park every day.
+
+---
+
+## 🧰 Technologies Used
+
+- 🤗 **Hugging Face Transformers** (`flan-t5-base`)  
+- 🔥 **PyTorch**  
+- 📊 **NLTK**, **ROUGE**, **TQDM**  
+- 🧪 **BLEU and ROUGE-L Metrics**  
+- 💾 **Minimal GPU (6GB) supported**
+
+---
+
+## 👨‍💻 Created by Soumo
+
+Feel free to explore, contribute, or remix this storytelling machine!  
+Questions or improvements? **Open an issue** or **drop a ⭐ if you find it helpful!**
